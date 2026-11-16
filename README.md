@@ -56,6 +56,41 @@ python -m minitorrent.cli download file.meta --out downloads/
 python -m minitorrent.gui
 ```
 
+## Running on multiple machines
+
+The demo runs on 4 or more laptops on the same network, not only on one PC.
+
+### Design rules (follow these from week 1)
+
+- **Listen on all interfaces.** Use `bind(("0.0.0.0", port))`, never `127.0.0.1`, or other laptops cannot connect.
+- **The tracker records the IP it sees.** A peer sends only its listening port. The tracker takes the IP from the socket (`conn, (ip, _) = server.accept()`). Peers never report their own IP.
+- **No hardcoded addresses.** The tracker address comes from `--tracker IP:PORT` (or the GUI) and is saved in the metadata file. Each peer's port is an option, so several peers can still run on one PC.
+- **Expect peers to vanish.** Use socket timeouts so a closed laptop does not freeze a download.
+
+### Network
+
+- University Wi-Fi usually blocks devices from talking to each other. Use a phone hotspot, your own router, or an Ethernet switch.
+- Test the demo network before demo day.
+
+### Setup on each Windows laptop
+
+1. Find the LAN IP with `ipconfig` (IPv4 address of the Wi-Fi or Ethernet adapter).
+2. Set the network to **Private** in Windows settings.
+3. Allow the ports through the firewall (admin terminal, once):
+   ```bash
+   netsh advfirewall firewall add rule name="MiniTorrent" dir=in action=allow protocol=TCP localport=6000-6010
+   ```
+   If Windows shows a firewall pop-up when Python starts, allow it on private networks.
+4. Check that the laptops can reach each other with `ping <ip>`.
+
+### Demo steps
+
+1. Laptop A starts the tracker.
+2. Laptop B shares a file with `--tracker <A's IP>:6000`.
+3. Copy the metadata file to laptops C, D and E.
+4. C, D and E download at the same time.
+5. Close one laptop mid-download and show the others still finish.
+
 ## Timeline
 
 | Week | Milestone |
